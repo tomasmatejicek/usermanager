@@ -1,0 +1,6 @@
+.idea/
+bin/
+*.tmp
+*.bak
+Thumbs.db
+Desktop.ini
