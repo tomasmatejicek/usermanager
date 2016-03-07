@@ -19,8 +19,6 @@
     "nette/tester": "~1.7"
   },
   "autoload": {
-    "psr-4": {
-      "classmap": ["src/"]
-    }
+    "classmap": ["src/"]
   }
 }
