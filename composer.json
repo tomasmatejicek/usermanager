@@ -11,7 +11,7 @@
   "require": {
     "php": ">=5.5.1",
     "foglcz/ldap-authenticator": "~1.2",
-    "nette/security": "~2.3"
+    "nette/security": "~2.3",
     "nette/database": "~2.3",
     "nette/utils": "~2.3"
   },
