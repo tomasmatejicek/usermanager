@@ -13,7 +13,10 @@ use Nette,
  */
 class Authenticator implements IAuthenticator
 {
-	/**
+	/** @var \Mepatek\UserManager\Repository\UserRepository @inject */
+	public $userRepository;
+
+    /**
 	 * Performs an authentication.
 	 * @return Nette\Security\Identity
 	 * @throws Nette\Security\AuthenticationException
