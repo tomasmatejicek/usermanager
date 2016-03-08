@@ -1,6 +1,6 @@
 <?php
 
-namespace Mepatek\TaskManager\Repository;
+namespace Mepatek\UserManager\Repository;
 
 
 

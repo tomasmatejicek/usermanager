@@ -1,9 +1,9 @@
 <?php
 
-namespace Mepatek\TaskManager\Repository;
+namespace Mepatek\UserManager\Repository;
 
 use Nette\Object,
-	Mepatek\TaskManager\IMapper;
+	Mepatek\UserManager\IMapper;
 
 abstract class AbstractRepository extends Object implements IRepository
 {
