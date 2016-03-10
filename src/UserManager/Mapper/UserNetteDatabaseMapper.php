@@ -4,7 +4,7 @@ namespace Mepatek\UserManager\Mapper;
 
 use Nette,
 	Nette\Database\Context,
-	App\Model\Logger,
+	Nette\Utils\DateTime,
 	Mepatek\UserManager\Entity\User;
 
 /**
@@ -21,18 +21,19 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 
 	/**
 	 * UserNetteDatabaseMapper constructor.
-	 * @param Context $database
-	 * @param Logger|null $logger
+	 *
+	 * @param Context     $database
 	 */
-	public function __construct(Context $database, Logger $logger=null)
+	public function __construct(Context $database)
 	{
 		$this->database = $database;
-		$this->logger = $logger;
 	}
 
 	/**
 	 * Save item
+	 *
 	 * @param Task $item
+	 *
 	 * @return boolean
 	 */
 	public function save(&$item)
@@ -40,7 +41,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 		$data = $this->itemToData($item);
 		$retSave = false;
 
-		if (! $item->id) { // new --> insert
+		if (!$item->id) { // new --> insert
 
 			unset($data["UserID"]);
 			$data["Created"] = new Nette\Utils\DateTime();
@@ -49,7 +50,8 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 				->insert($data);
 			if ($row) {
 				$item->id = $row["UserID"];
-				$this->logInsert(__CLASS__, $item);
+				$item->created = $data["Created"];
+				$this->saveRoles($item);
 				$retSave = true;
 			}
 		} else { // update
@@ -61,7 +63,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 				->where("UserID", $item->id)
 				->update($data);
 			if ($row) {
-				$this->logSave(__CLASS__, $item_old, $item);
+				$this->saveRoles($item);
 				$retSave = true;
 			}
 		}
@@ -70,61 +72,111 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 	}
 
 	/**
-	 * Delete item
-	 * @param integer $id
-	 * @return boolean
+	 * Item data to array
+	 *
+	 * @param User $item
+	 *
+	 * @return array
 	 */
-	public function delete($id)
+	private function itemToData(User $item)
 	{
-		$deletedRow = 0;
-		if (($item = $this->find($id))) {
+		$data = [];
 
-			$deleted = $this->deleted;
-			$this->deleted = true;
-
-			$deletedRow = $this->getTable()
-				->where("UserID", $id)
-				->update(
-					array(
-						"Deleted" => TRUE,
-					)
-				);
-
-			$this->deleted = $deleted;
-
-			$this->logDelete(__CLASS__, $item, "UPDATE Users SET Deleted WHERE UserID=" . $id . " (cnt: $deletedRow)");
+		foreach ($this->mapItemPropertySQLNames() as $property => $columnSql) {
+			$data[$columnSql] = $item->$property;
 		}
-		return $deletedRow > 0;
+
+		return $data;
 	}
 
 	/**
-	 * Permanently delete item
-	 * @param integer $id
-	 * @return boolean
+	 * Get array map of item property vs SQL columns name for Tasks table
+	 * @return array
 	 */
-	public function deletePermanently($id)
+	protected function mapItemPropertySQLNames()
 	{
-		$deletedRow = 0;
-		if (($item = $this->find($id))) {
+		return [
+			"id"         => "UserID",
+			"fullName"   => "FullName",
+			"userName"   => "UserName",
+			"email"      => "Email",
+			"phone"      => "Phone",
+			"created"    => "Created",
+			"lastLogged" => "LastLogged",
+			"disabled"   => "Disabled",
+			"deleted"    => "Deleted",
+		];
+	}
 
-			$deleted = $this->deleted;
-			$this->deleted = true;
-
-			$deletedRow = $this->getTable()
-				->where("UserID", $id)
-				->delete();
-
-			$this->deleted = $deleted;
-
-			$this->logDelete(__CLASS__, $item, "DELETE FROM Users WHERE UserID=" . $id . " (cnt: $deletedRow)");
+	/**
+	 * Get view object
+	 * @return \Nette\Database\Table\Selection
+	 */
+	protected function getTable()
+	{
+		$table = $this->database->table("Users");
+		if (!$this->deleted) {
+			$table->where("Deleted", false);
 		}
-		return $deletedRow > 0;
+		return $table;
+	}
+
+	/**
+	 * Save roles from item
+	 *
+	 * @param User $item
+	 */
+	public function saveRoles($item)
+	{
+		// any changes?
+		$oldroles = $this->getRoles($item->id);
+		if ($oldroles === $item->roles) {
+			// no? bye :)
+			return;
+		}
+
+		// DELETE all roles
+		$this->database
+			->table("UsersRoles")
+			->where("UserID", $item->id)
+			->delete();
+
+		foreach ($item->roles as $role) {
+			// insert rules
+			$this->database
+				->table("UsersRoles")
+				->insert(
+					[
+						"UserID" => $item->id,
+						"Role"   => $role,
+					]
+				);
+		}
+
+	}
+
+	/**
+	 * Ger array of roles for user id
+	 *
+	 * @param integer $userId
+	 *
+	 * @return array
+	 */
+	private function getRoles($userId)
+	{
+		$roles = $this->database// get roles from table
+		->table("UsersRoles")
+			->select("Role")
+			->where("UserID", $userId)
+			->fetchPairs("Role", "Role");
+		return array_values($roles);
 	}
 
 	/**
 	 * Find 1 entity by ID
 	 *
 	 * @param string $id
+	 *
 	 * @return User
 	 */
 	public function find($id)
@@ -140,56 +192,147 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 	}
 
 	/**
-	* Find first entity by $values (key=>value)
-	* @param array $values
-	* @param array $order Order => column=>ASC/DESC
-	* @return User
-	*/
-	public function findOneBy(array $values, $order=null)
+	 * Find first entity by $values (key=>value)
+	 *
+	 * @param array $values
+	 * @param array $order Order => column=>ASC/DESC
+	 *
+	 * @return User
+	 */
+	public function findOneBy(array $values, $order = null)
 	{
 		$items = $this->findBy($values, $order, 1);
-		if (count($items)>0) {
+		if (count($items) > 0) {
 			return $items[0];
 		} else {
-			return NULL;
+			return null;
 		}
 	}
 
-
 	/**
-	* Get view object
-	* @return \Nette\Database\Table\Selection
-	*/
-	protected function getTable()
+	 * Delete item
+	 *
+	 * @param integer $id
+	 *
+	 * @return boolean
+	 */
+	public function delete($id)
 	{
-		$table = $this->database->table("Users");
-		if ( ! $this->deleted ) {
-			$table->where("Deleted",FALSE);
+		$deletedRow = 0;
+		if (($item = $this->find($id))) {
+
+			$deleted = $this->deleted;
+			$this->deleted = true;
+
+			$deletedRow = $this->getTable()
+				->where("UserID", $id)
+				->update(
+					[
+						"Deleted" => true,
+					]
+				);
+
+			$this->deleted = $deleted;
 		}
-		return $table;
+		return $deletedRow > 0;
 	}
 
 	/**
-	 * Item data to array
+	 * Permanently delete item
+	 *
+	 * @param integer $id
+	 *
+	 * @return boolean
+	 */
+	public function deletePermanently($id)
+	{
+		$deletedRow = 0;
+		if (($item = $this->find($id))) {
+
+			$deleted = $this->deleted;
+			$this->deleted = true;
+
+			$deletedRow = $this->getTable()
+				->where("UserID", $id)
+				->delete();
+
+			$this->deleted = $deleted;
+		}
+		return $deletedRow > 0;
+	}
+
+	/**
+	 * Get password hash for user
+	 * Null if not find
 	 *
 	 * @param User $item
-	 * @return array
+	 *
+	 * @return string|null
 	 */
-	private function itemToData(User $item)
+	public function getPassword(User $item)
 	{
-		$data = array();
-
-		foreach ($this->mapItemPropertySQLNames() as $property => $columnSql) {
-			$data[$columnSql] = $item->$property;
+		$row = $this->getTable()
+			->select("PwHash")
+			->where("UserID", $item->id)
+			->fetch();
+		if ($row) {
+			return $row->PwHash;
+		} else {
+			return null;
 		}
+	}
 
-		return $data;
+	/**
+	 * Change password for user with $id
+	 * Reset PwToken*
+	 * False if not find or not change
+	 *
+	 * @param integer $id
+	 * @param string  $newHashPassword
+	 *
+	 * @return boolean
+	 */
+	public function changePassword($id, $newHashPassword)
+	{
+
+		$rowCnt = $this->getTable()
+			->where("UserID", $id)
+			->update(
+				[
+					"PwHash"        => $newHashPassword,
+					"PwToken"       => null,
+					"PwTokenExpire" => null,
+				]
+			);
+
+		return $rowCnt > 0;
+	}
+
+	/**
+	 * Find user by token
+	 *
+	 * @param $token
+	 *
+	 * @return User|null
+	 */
+	public function findUserByToken($token)
+	{
+		$row = $this->getTable()
+			->where("PwToken", $token)
+			->where("PwTokenExpire >=", new DateTime())
+			->fetch();
+		if ($row) {
+			return $this->dataToItem($row);
+		} else {
+			return null;
+		}
 	}
 
 	/**
 	 * from data to item
 	 *
 	 * @param \Nette\Database\IRow $data
+	 *
 	 * @return User
 	 */
 	protected function dataToItem($data)
@@ -200,26 +343,50 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 			$item->$property = $data->$columnSql;
 		}
 
+		$this->loadRoles($item);
+
 		return $item;
 	}
 
+	/**
+	 * load roles to item
+	 *
+	 * @param User $item
+	 */
+	private function loadRoles(&$item)
+	{
+		// clear roles
+		$item->deleteAllRoles();
+
+		// set roles to item
+		foreach ($this->getRoles($item->id) as $role) {
+			$item->addRole($role);
+		}
+	}
 
 	/**
-	 * Get array map of item property vs SQL columns name for Tasks table
-	 * @return array
+	 * Reset and return password token
+	 *
+	 * @param User     $item
+	 * @param DateTime $tokenExpire
+	 *
+	 * @return string new password token
 	 */
-	protected function mapItemPropertySQLNames()
+	public function resetPasswordToken(User $item, DateTime $tokenExpire)
 	{
-		return array (
-			"id"			=> "UserID",
-			"fullName"		=> "FullName",
-			"userName"		=> "UserName",
-			"email"			=> "Email",
-			"phone"			=> "Phone",
-			"created"		=> "Created",
-			"lastLogged"	=> "LastLogged",
-			"disabled"		=> "Disabled",
-			"deleted"		=> "Deleted",
-		);
+		$token = md5(md5(uniqid(rand(), true)));
+		$row = $this->getTable()
+			->where("UserID", $item->id)
+			->update(
+				[
+					"PwToken"       => $token,
+					"PwTokenExpire" => $tokenExpire,
+				]
+			);
+		if ($row > 0) {
+			return $token;
+		} else {
+			return null;
+		}
 	}
 }

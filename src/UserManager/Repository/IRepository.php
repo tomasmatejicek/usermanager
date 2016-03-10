@@ -3,16 +3,40 @@
 namespace Mepatek\UserManager\Repository;
 
 
-
+/**
+ * Interface IRepository
+ * @package Mepatek\UserManager\Repository
+ */
 interface IRepository
 {
-	/** find by ID **/
+	/**
+	 * Find by ID
+	 *
+	 * @param $id
+	 *
+	 * @return mixed
+	 */
 	public function find($id);
 
-	/** find by $values **/
+	/**
+	 * Find by $values
+	 *
+	 * @param array   $values
+	 * @param array   $order Order => column=>ASC/DESC
+	 * @param integer $limit Limit count
+	 * @param integer $offset Limit offset
+	 *
+	 * @return array
+	 */
 	public function findBy(array $values, $order, $limit, $offset);
 
-	/** find by $values **/
+	/**
+	 * Count entities by $values
+	 *
+	 * @param array $values
+	 *
+	 * @return integer
+	 */
 	public function countBy(array $values);
 
 }

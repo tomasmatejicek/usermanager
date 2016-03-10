@@ -2,7 +2,9 @@
 
 namespace Mepatek\UserManager\Mapper;
 
-use Nette;
+use Nette,
+	Nette\Database\IRow,
+	Nette\Database\Table\Selection;
 
 
 class AbstractNetteDatabaseMapper extends AbstractMapper
@@ -10,16 +12,17 @@ class AbstractNetteDatabaseMapper extends AbstractMapper
 	/**
 	 * Find entities by $values (key=>value)
 	 *
-	 * @param array $values
-	 * @param array $order Order => column=>ASC/DESC
+	 * @param array   $values
+	 * @param array   $order Order => column=>ASC/DESC
 	 * @param integer $limit Limit count
 	 * @param integer $offset Limit offset
+	 *
 	 * @return array
 	 */
-	public function findBy(array $values, $order=null, $limit=null, $offset=null)
+	public function findBy(array $values, $order = null, $limit = null, $offset = null)
 	{
-		$selection = $this->selectionBy( $values, $order, $limit, $offset );
-		$retArray = array();
+		$selection = $this->selectionBy($values, $order, $limit, $offset);
+		$retArray = [];
 		foreach ($selection as $row) {
 			$retArray[] = $this->dataToItem($row);
 		}
@@ -27,44 +30,17 @@ class AbstractNetteDatabaseMapper extends AbstractMapper
 	}
 
 	/**
-	 * Count entities by $values (key=>value)
-	 *
-	 * @param array $values
-	 * @return integer
-	 */
-	public function countBy(array $values)
-	{
-		return $this->selectionBy($values)->count();
-	}
-
-	/**
-	 * Sum column (property) by $values (key=>value)
-	 *
-	 * @param array $values
-	 * @param $column
-	 * @return integer
-	 */
-	public function sumBy(array $values, $column)
-	{
-		return $this->selectionBy($values)->sum($this->translatePropertyToColumnSQL($column));
-	}
-
-	/**
 	 * Helper for findBy, countBy
 	 *
-	 * @param array $values
-	 * @param array $order Order => column=>ASC/DESC
+	 * @param array   $values
+	 * @param array   $order Order => column=>ASC/DESC
 	 * @param integer $limit Limit count
 	 * @param integer $offset Limit offset
+	 *
 	 * @return Nette\Database\Table\Selection
 	 */
-	private function selectionBy(array $values, $order = null, $limit = null, $offset = null)
+	protected function selectionBy(array $values, $order = null, $limit = null, $offset = null)
 	{
-		// for MSSQL - ORDER MUST BE SET FOR OFFSET
-		if ($order === null or (is_array($order) and count($order) == 0) ) {
-			// set order by ID
-			$order = array("id" => "ASC");
-		}
 		$selection = $this->getTable();
 		// compose Where
 		foreach ($values as $key => $value) {
@@ -78,7 +54,9 @@ class AbstractNetteDatabaseMapper extends AbstractMapper
 			foreach ($order as $column => $ascdesc) {
 				// translate properties to SQL column name
 				$columnTranslate = $this->translatePropertyToColumnSQL($column);
-				$orderString = ($orderString ? "," : "") . $columnTranslate . (strtolower($ascdesc) == "desc" ? " DESC" : "");
+				$orderString = ($orderString ? "," : "") . $columnTranslate . (strtolower(
+						$ascdesc
+					) == "desc" ? " DESC" : "");
 			}
 			if ($orderString) {
 				$selection->order($orderString);
@@ -92,18 +70,79 @@ class AbstractNetteDatabaseMapper extends AbstractMapper
 				$selection->limit((int)$limit);
 			}
 		}
+
 		return $selection;
 	}
 
+	/**
+	 * Get table object
+	 *
+	 * @return Selection
+	 */
+	protected function getTable()
+	{
+		return null;
+	}
 
 	/**
 	 * Translate property name in string to SQl column name
-	 * @param $string
+	 *
+	 * @param string $string
+	 *
 	 * @return string
 	 */
-	private function translatePropertyToColumnSQL($string)
+	protected function translatePropertyToColumnSQL($string)
 	{
-		return strtr( $string, $this->mapItemPropertySQLNames() );
+		return strtr($string, $this->mapItemPropertySQLNames());
+	}
+
+	/**
+	 * Get array map of item property vs SQL columns name
+	 * For overwrite
+	 *
+	 * @return array
+	 */
+	protected function mapItemPropertySQLNames()
+	{
+		return [];
+	}
+
+	/**
+	 * From data to item
+	 * For overwrite
+	 *
+	 * @param IRow $data
+	 *
+	 * @return mixed
+	 */
+	protected function dataToItem($data)
+	{
+		return iterator_to_array($data);
+	}
+
+	/**
+	 * Count entities by $values (key=>value)
+	 *
+	 * @param array $values
+	 *
+	 * @return integer
+	 */
+	public function countBy(array $values)
+	{
+		return $this->selectionBy($values)->count();
+	}
+
+	/**
+	 * Sum column (property) by $values (key=>value)
+	 *
+	 * @param array $values
+	 * @param       $column
+	 *
+	 * @return integer
+	 */
+	public function sumBy(array $values, $column)
+	{
+		return $this->selectionBy($values)->sum($this->translatePropertyToColumnSQL($column));
 	}
 
 }

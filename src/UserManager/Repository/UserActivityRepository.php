@@ -72,4 +72,5 @@ class UserActivityRepository extends AbstractRepository
 		return $this->mapper->findOneBy($values, $order);
 	}
 
+
 }

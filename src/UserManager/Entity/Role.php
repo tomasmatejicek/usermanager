@@ -13,24 +13,24 @@ class Role extends AbstractEntity
 	protected $name;
 	/** @var string */
 	protected $description;
-	/** @var bool - indicated if entity loaded from repository (true) or is new (false)*/
-	private $loaded = false;
+	/** @var string|false - indicated if entity loaded from repository (=loaded role) or entity is new (false) */
+	private $loadedRole = false;
 
 	/**
-	 * @return boolean
+	 * @return string|boolean
 	 */
-	public function getLoaded()
+	public function getLoadedRole()
 	{
-		return $this->loaded;
+		return $this->loadedRole;
 	}
 
 	/**
-	 * @param boolean $loaded
+	 * @param string $loadedRole
 	 */
-	public function setLoaded($loaded)
+	public function setLoadedRole($loadedRole)
 	{
-		// only once set true
-		$this->loaded = ($this->loaded or (bool)$loaded);
+		// only once set string
+		$this->loadedRole = (string)$loadedRole;
 	}
 
 	/**

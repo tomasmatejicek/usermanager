@@ -2,24 +2,68 @@
 
 namespace Mepatek\UserManager\Mapper;
 
+/**
+ * Interface IMapper
+ * @package Mepatek\UserManager\Mapper
+ */
 interface IMapper
 {
-	/** save entity **/
+	/**
+	 * Save entity
+	 *
+	 * @param mixed $entity
+	 *
+	 * @return boolean
+	 */
 	public function save(&$entity);
 
-	/** delete entity **/
+	/**
+	 * Delete entity
+	 *
+	 * @param mixed $id
+	 *
+	 * @return boolean
+	 */
 	public function delete($id);
 
-	/** find by ID **/
+	/**
+	 * Find by ID
+	 *
+	 * @param mixed $id
+	 *
+	 * @return mixed
+	 */
 	public function find($id);
 
-	/** find by $values **/
+	/**
+	 * Find by $values
+	 *
+	 * @param array   $values
+	 * @param array   $order Order => column=>ASC/DESC
+	 * @param integer $limit Limit count
+	 * @param integer $offset Limit offset
+	 *
+	 * @return array
+	 */
 	public function findBy(array $values, $order, $limit, $offset);
 
-	/** count by $values **/
+	/**
+	 * Count entities by $values
+	 *
+	 * @param array $values
+	 *
+	 * @return integer
+	 */
 	public function countBy(array $values);
 
-	/** find first by $values **/
+	/**
+	 * Find first entity by $values
+	 *
+	 * @param array $values
+	 * @param array $order Order => column=>ASC/DESC
+	 *
+	 * @return mixed
+	 */
 	public function findOneBy(array $values, $order);
 
 }
