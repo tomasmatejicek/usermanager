@@ -38,25 +38,38 @@ class RoleRepository extends AbstractRepository
 	/**
 	 * Delete Role
 	 *
-	 * @param integer $id
+	 * @param string $id
 	 *
 	 * @return boolean
 	 */
 	public function delete($id)
 	{
-		return $this->mapper->delete((int)$id);
+		return $this->mapper->delete((string)$id);
 	}
+
+	/**
+	 * Delete Role permanently
+	 *
+	 * @param string $id
+	 *
+	 * @return boolean
+	 */
+	public function deletePermanently($id)
+	{
+		return $this->mapper->deletePermanently((string)$id);
+	}
+
 
 	/**
 	 * Find by id
 	 *
-	 * @param integer $id
+	 * @param string $id
 	 *
 	 * @return Role
 	 */
 	public function find($id)
 	{
-		return $this->mapper->find((int)$id);
+		return $this->mapper->find((string)$id);
 	}
 
 	/**

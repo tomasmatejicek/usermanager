@@ -28,10 +28,7 @@ class User extends AbstractEntity
 	protected $deleted;
 
 	/** @var array */
-	protected $roles = array();
-
-	/** @var UserActivity[]|null */
-	protected $activities = null;
+	protected $roles = [];
 
 	/**
 	 * @return int
@@ -181,35 +178,42 @@ class User extends AbstractEntity
 	}
 
 	/**
+	 * Get role array
 	 * @return Role[]
 	 */
 	public function getRoles()
 	{
-		return $this->roles;
+		return array_values($this->roles);
 	}
 
 	/**
-	 * @param Role[] $roles
+	 * Delete role
+	 *
+	 * @param string $role
 	 */
-	public function setRoles($roles)
+	public function deleteRole($role)
 	{
-		$this->roles = $roles;
+		if (isset($this->roles[$role])) {
+			unset ($this->roles[$role]);
+		}
 	}
 
 	/**
-	 * @return UserActivity[]|null
+	 * delete all roles
 	 */
-	public function getActivities()
+	public function deleteAllRoles()
 	{
-		return $this->activities;
+		$this->roles = [];
 	}
 
 	/**
-	 * @param UserActivity[]|null $activities
+	 * Add role
+	 *
+	 * @param string $role
 	 */
-	public function setActivities($activities)
+	public function addRole($role)
 	{
-		$this->activities = $activities;
+		$this->roles[$role] = $role;
 	}
 
 

@@ -3,6 +3,7 @@
 namespace Mepatek\UserManager\Repository;
 
 use Mepatek\UserManager\Mapper\IMapper,
+	Nette\Utils\Datetime,
 	Mepatek\UserManager\Entity\User;
 
 /**
@@ -82,6 +83,59 @@ class UserRepository extends AbstractRepository
 	public function findOneBy(array $values, $order = null)
 	{
 		return $this->mapper->findOneBy($values, $order);
+	}
+
+
+	/**
+	 * Get password hash for user
+	 *
+	 * @param User $item
+	 *
+	 * @return string|null
+	 */
+	public function getPassword(User $item)
+	{
+		return $this->mapper->getPassword($item);
+	}
+
+	/**
+	 * Change password for user with $id
+	 * Reset PwToken*
+	 * False if not find or not change
+	 *
+	 * @param integer $id
+	 * @param string  $newHashPassword
+	 *
+	 * @return boolean
+	 */
+	public function changePassword($id, $newHashPassword)
+	{
+		return $this->mapper->changePassword($id, $newHashPassword);
+	}
+
+	/**
+	 * Reset and return password token
+	 *
+	 * @param User     $item
+	 * @param DateTime $tokenExpire
+	 *
+	 * @return string new password token
+	 */
+	public function resetPasswordToken(User $item, DateTime $tokenExpire)
+	{
+		return $this->mapper->resetPasswordToken($item, $tokenExpire);
+	}
+
+	/**
+	 * Find user by token
+	 *
+	 * @param $token
+	 *
+	 * @return User|null
+	 */
+	public function findUserByToken($token)
+	{
+		return $this->mapper->findUserByToken($token);
 	}
 
 }

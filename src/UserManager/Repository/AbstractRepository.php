@@ -2,36 +2,41 @@
 
 namespace Mepatek\UserManager\Repository;
 
-use Nette\Object,
-	Mepatek\UserManager\IMapper;
+use Nette\Object;
 
+/**
+ * Class AbstractRepository
+ * @package Mepatek\UserManager\Repository
+ */
 abstract class AbstractRepository extends Object implements IRepository
 {
 
-	/** IMapper */
+	/** @var \Mepatek\UserManager\Mapper\IMapper */
 	protected $mapper;
 
 	/**
-	* Delete
-	*
-	* @param mixed $id
-	* @return boolean
-	*/
+	 * Delete
+	 *
+	 * @param mixed $id
+	 *
+	 * @return boolean
+	 */
 	public function delete($id)
 	{
 		return $this->mapper->delete($id);
 	}
 
 	/**
-	* Find items by values
-	*
-	* @param array $values
-	* @param array $order
-	* @param int $limit
-	* @param int $offset
-	* @return array of items
-	*/
-	public function findBy(array $values, $order=null, $limit=null, $offset=null)
+	 * Find items by values
+	 *
+	 * @param array $values
+	 * @param array $order
+	 * @param int   $limit
+	 * @param int   $offset
+	 *
+	 * @return array of items
+	 */
+	public function findBy(array $values, $order = null, $limit = null, $offset = null)
 	{
 		return $this->mapper->findBy($values, $order, $limit, $offset);
 	}
@@ -40,6 +45,7 @@ abstract class AbstractRepository extends Object implements IRepository
 	 * Count items by $values
 	 *
 	 * @param array $values
+	 *
 	 * @return integer
 	 */
 	public function countBy(array $values)
