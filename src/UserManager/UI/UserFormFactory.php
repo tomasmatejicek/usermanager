@@ -8,10 +8,10 @@ use Nette\Application\UI\Form,
 	Nette\Security\AuthenticationException;
 
 /**
- * Class userFormFactory
+ * Class UserFormFactory
  * @package Mepatek\UserManager\UI
  */
-class userFormFactory extends Object
+class UserFormFactory extends Object
 {
 	/**
 	 * Minimum password length
