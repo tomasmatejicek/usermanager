@@ -1,6 +1,8 @@
 <?php
 namespace Mepatek\UserManager\Entity;
 
+use Mepatek\Entity\AbstractEntity;
+
 /**
  * Class Role
  * @package Mepatek\UserManager\Entity

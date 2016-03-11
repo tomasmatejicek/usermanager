@@ -2,7 +2,9 @@
 
 namespace Mepatek\UserManager\Repository;
 
-use Mepatek\UserManager\Mapper\IMapper,
+use Mepatek\Repository\AbstractRepository;
+
+use Mepatek\Mapper\IMapper,
 	Nette\Utils\Datetime,
 	Mepatek\UserManager\Entity\User;
 

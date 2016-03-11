@@ -1,6 +1,7 @@
 <?php
 namespace Mepatek\UserManager\Entity;
 
+use Mepatek\Entity\AbstractEntity;
 
 /**
  * Class UserActivity

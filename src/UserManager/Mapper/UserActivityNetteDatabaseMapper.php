@@ -2,6 +2,9 @@
 
 namespace Mepatek\UserManager\Mapper;
 
+use Mepatek\Mapper\AbstractNetteDatabaseMapper,
+	Mepatek\Mapper\IMapper;
+
 use Nette,
 	Nette\Database\Context,
 	Mepatek\UserManager\Entity\UserActivity;
