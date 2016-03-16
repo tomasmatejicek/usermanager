@@ -15,8 +15,6 @@ use Nette,
  */
 class UserActivityNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMapper
 {
-	/** @var Context */
-	private $database;
 
 	/**
 	 * UserActivityNetteDatabaseMapper constructor.

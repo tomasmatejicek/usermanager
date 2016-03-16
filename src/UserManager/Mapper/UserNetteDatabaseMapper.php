@@ -16,8 +16,6 @@ use Nette,
  */
 class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMapper
 {
-	/** @var Nette\Database\Context */
-	private $database;
 
 	/** @var boolean TRUE - find deleted row */
 	private $deleted;
