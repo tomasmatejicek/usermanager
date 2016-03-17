@@ -46,6 +46,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 
 			unset($data["UserID"]);
 			$data["Created"] = new Nette\Utils\DateTime();
+			$data["PwHash"] = "";
 
 			$row = $this->getTable()
 				->insert($data);
@@ -56,17 +57,15 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 				$retSave = true;
 			}
 		} else { // update
-			$item_old = $this->find($item->id);
 			unset($data["UserID"]);
 			unset($data["Created"]);
+			unset($data["Deleted"]);
 
-			$row = $this->getTable()
+			$this->getTable()
 				->where("UserID", $item->id)
 				->update($data);
-			if ($row) {
-				$this->saveRoles($item);
-				$retSave = true;
-			}
+			$this->saveRoles($item);
+			$retSave = true;
 		}
 
 		return $retSave;

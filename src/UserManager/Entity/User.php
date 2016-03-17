@@ -151,7 +151,7 @@ class User extends AbstractEntity
 	 */
 	public function getDisabled()
 	{
-		return $this->disabled;
+		return $this->disabled ? true : false;
 	}
 
 	/**
@@ -159,7 +159,7 @@ class User extends AbstractEntity
 	 */
 	public function setDisabled($disabled)
 	{
-		$this->disabled = (bool)$disabled;
+		$this->disabled = $disabled ? true : false;
 	}
 
 	/**
@@ -167,7 +167,7 @@ class User extends AbstractEntity
 	 */
 	public function getDeleted()
 	{
-		return $this->deleted;
+		return $this->deleted ? true : false;
 	}
 
 	/**
@@ -175,7 +175,7 @@ class User extends AbstractEntity
 	 */
 	public function setDeleted($deleted)
 	{
-		$this->deleted = (bool)$deleted;
+		$this->deleted = $deleted ? true : false;
 	}
 
 	/**
@@ -185,6 +185,17 @@ class User extends AbstractEntity
 	public function getRoles()
 	{
 		return array_values($this->roles);
+	}
+
+	/**
+	 * @param array $roles
+	 */
+	public function setRoles(array $roles)
+	{
+		$this->deleteAllRoles();
+		foreach ($roles as $role) {
+			$this->addRole($role);
+		}
 	}
 
 	/**

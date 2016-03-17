@@ -51,13 +51,11 @@ class RoleNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 			}
 		} else { // update
 
-			$row = $this->getTable()
+			$this->getTable()
 				->where("Role", $item->loadedRole)
 				->update($data);
 
-			if ($row) {
-				$retSave = true;
-			}
+			$retSave = true;
 		}
 
 		return $retSave;
