@@ -10,13 +10,13 @@
   ],
   "require": {
     "php": ">=5.5.1",
-    "foglcz/ldap-authenticator": "~1.2",
     "nette/security": "~2.3",
     "nette/database": "~2.3",
     "nette/utils": "~2.3",
     "nette/forms": "^2.3",
     "nette/application": "^2.3",
-    "mepatek/application": "^1.0"
+    "mepatek/application": "^1.0",
+    "adldap2/adldap2": "^5.2"
   },
   "require-dev": {
     "nette/tester": "~1.7"
