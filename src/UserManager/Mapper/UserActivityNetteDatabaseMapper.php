@@ -42,6 +42,9 @@ class UserActivityNetteDatabaseMapper extends AbstractNetteDatabaseMapper implem
 
 			unset($data["UserActivityID"]);
 			$data["ActivityDateTime"] = new Nette\Utils\DateTime();
+			if (!$data["IP"]) {
+				$data["IP"] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : NULL;
+			}
 
 			$row = $this->getTable()
 				->insert($data);
@@ -53,6 +56,7 @@ class UserActivityNetteDatabaseMapper extends AbstractNetteDatabaseMapper implem
 		} else { // update
 			unset($data["UserActivityID"]);
 			unset($data["ActivityDateTime"]);
+			unset($data["IP"]);
 
 			$row = $this->getTable()
 				->where("UserActivityID", $item->id)

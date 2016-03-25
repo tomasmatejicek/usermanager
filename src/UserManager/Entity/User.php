@@ -24,12 +24,18 @@ class User extends AbstractEntity
 	/** @var \Nette\Utils\DateTime */
 	protected $lastLogged;
 	/** @var bool */
-	protected $disabled;
+	protected $disabled = false;
 	/** @var bool */
-	protected $deleted;
+	protected $deleted = false;
 
 	/** @var array */
 	protected $roles = [];
+
+	/** @var array authDriverName=>authId */
+	protected $authDrivers = [];
+
+	/** @var string */
+	protected $authMethod;
 
 	/**
 	 * @return int
@@ -178,6 +184,23 @@ class User extends AbstractEntity
 		$this->deleted = $deleted ? true : false;
 	}
 
+
+	/**
+	 * @return string
+	 */
+	public function getAuthMethod()
+	{
+		return $this->authMethod;
+	}
+
+	/**
+	 * @param string $authMethod
+	 */
+	public function setAuthMethod($authMethod)
+	{
+		$this->authMethod = $authMethod;
+	}
+
 	/**
 	 * Get role array
 	 * @return Role[]
@@ -199,18 +222,6 @@ class User extends AbstractEntity
 	}
 
 	/**
-	 * Delete role
-	 *
-	 * @param string $role
-	 */
-	public function deleteRole($role)
-	{
-		if (isset($this->roles[$role])) {
-			unset ($this->roles[$role]);
-		}
-	}
-
-	/**
 	 * delete all roles
 	 */
 	public function deleteAllRoles()
@@ -228,5 +239,67 @@ class User extends AbstractEntity
 		$this->roles[$role] = $role;
 	}
 
+	/**
+	 * Delete role
+	 *
+	 * @param string $role
+	 */
+	public function deleteRole($role)
+	{
+		if (isset($this->roles[$role])) {
+			unset ($this->roles[$role]);
+		}
+	}
+
+	/**
+	 * Get authDrivers with ID
+	 * @return array
+	 */
+	public function getAuthDrivers()
+	{
+		return $this->authDrivers;
+	}
+
+	/**
+	 * @param array $authDrivers
+	 */
+	public function setAuthDrivers(array $authDrivers)
+	{
+		$this->deleteAllAuthDrivers();
+		foreach ($authDrivers as $authDriver => $authId) {
+			$this->addAuthDriver($authDriver, $authId);
+		}
+	}
+
+	/**
+	 * delete all authDrivers
+	 */
+	public function deleteAllAuthDrivers()
+	{
+		$this->authDrivers = [];
+	}
+
+	/**
+	 * Add authDriver
+	 *
+	 * @param string $authDriver
+	 * @param string $authId
+	 */
+	public function addAuthDriver($authDriver, $authId)
+	{
+		$this->authDrivers[$authDriver] = $authId;
+	}
+
+	/**
+	 * Delete authDriver
+	 *
+	 * @param string $authDriver
+	 */
+	public function deleteAuthDriver($authDriver)
+	{
+		if (isset($this->authDrivers[$authDriver])) {
+			unset ($this->authDrivers[$authDriver]);
+		}
+	}
 
 }

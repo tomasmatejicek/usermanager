@@ -23,7 +23,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 	/**
 	 * UserNetteDatabaseMapper constructor.
 	 *
-	 * @param Context     $database
+	 * @param Context $database
 	 */
 	public function __construct(Context $database)
 	{
@@ -54,6 +54,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 				$item->id = $row["UserID"];
 				$item->created = $data["Created"];
 				$this->saveRoles($item);
+				$this->saveAuthDrivers($item);
 				$retSave = true;
 			}
 		} else { // update
@@ -65,6 +66,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 				->where("UserID", $item->id)
 				->update($data);
 			$this->saveRoles($item);
+			$this->saveAuthDrivers($item);
 			$retSave = true;
 		}
 
@@ -129,8 +131,8 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 	public function saveRoles($item)
 	{
 		// any changes?
-		$oldroles = $this->getRoles($item->id);
-		if ($oldroles === $item->roles) {
+		$oldRoles = $this->getRoles($item->id);
+		if ($oldRoles === $item->roles) {
 			// no? bye :)
 			return;
 		}
@@ -173,6 +175,86 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 	}
 
 	/**
+	 * Save auth drivers from item
+	 *
+	 * @param User $item
+	 */
+	public function saveAuthDrivers($item)
+	{
+		// any changes?
+		$oldAuthDrivers = $this->getAuthDrivers($item->id);
+		if ($oldAuthDrivers === $item->authDrivers) {
+			// no? bye :)
+			return;
+		}
+
+		// DELETE all roles
+		$this->database
+			->table("UsersAuthDrivers")
+			->where("UserID", $item->id)
+			->delete();
+
+		foreach ($item->authDrivers as $authDriver => $authId) {
+			// insert rules
+			$this->database
+				->table("UsersAuthDrivers")
+				->insert(
+					[
+						"UserID"     => $item->id,
+						"AuthDriver" => $authDriver,
+						"AuthID"     => $authId,
+					]
+				);
+		}
+
+	}
+
+	/**
+	 * Ger array of roles for user id
+	 *
+	 * @param integer $userId
+	 *
+	 * @return array
+	 */
+	private function getAuthDrivers($userId)
+	{
+		$roles = $this->database// get roles from table
+		->table("UsersAuthDrivers")
+			->select("AuthDriver, AuthID")
+			->where("UserID", $userId)
+			->fetchPairs("AuthDriver", "AuthID");
+		return array_values($roles);
+	}
+
+	/**
+	 * Delete item
+	 *
+	 * @param integer $id
+	 *
+	 * @return boolean
+	 */
+	public function delete($id)
+	{
+		$deletedRow = 0;
+		if (($item = $this->find($id))) {
+
+			$deleted = $this->deleted;
+			$this->deleted = true;
+
+			$deletedRow = $this->getTable()
+				->where("UserID", $id)
+				->update(
+					[
+						"Deleted" => true,
+					]
+				);
+
+			$this->deleted = $deleted;
+		}
+		return $deletedRow > 0;
+	}
+
+	/**
 	 * Find 1 entity by ID
 	 *
 	 * @param string $id
@@ -207,34 +289,6 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 		} else {
 			return null;
 		}
-	}
-
-	/**
-	 * Delete item
-	 *
-	 * @param integer $id
-	 *
-	 * @return boolean
-	 */
-	public function delete($id)
-	{
-		$deletedRow = 0;
-		if (($item = $this->find($id))) {
-
-			$deleted = $this->deleted;
-			$this->deleted = true;
-
-			$deletedRow = $this->getTable()
-				->where("UserID", $id)
-				->update(
-					[
-						"Deleted" => true,
-					]
-				);
-
-			$this->deleted = $deleted;
-		}
-		return $deletedRow > 0;
 	}
 
 	/**
@@ -344,6 +398,7 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 		}
 
 		$this->loadRoles($item);
+		$this->loadAuthDrivers($item);
 
 		return $item;
 	}
@@ -361,6 +416,22 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 		// set roles to item
 		foreach ($this->getRoles($item->id) as $role) {
 			$item->addRole($role);
+		}
+	}
+
+	/**
+	 * load roles to item
+	 *
+	 * @param User $item
+	 */
+	private function loadAuthDrivers(&$item)
+	{
+		// clear roles
+		$item->deleteAllAuthDrivers();
+
+		// set roles to item
+		foreach ($this->getAuthDrivers($item->id) as $authDriver => $authId) {
+			$item->addAuthDriver($authDriver, $authId);
 		}
 	}
 
