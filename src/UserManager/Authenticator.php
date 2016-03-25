@@ -7,7 +7,10 @@ use Nette,
 	Nette\Security\IAuthenticator,
 	Nette\Utils\DateTime,
 	Mepatek\UserManager\Repository\UserRepository,
-	Mepatek\UserManager\Entity\User;
+	Mepatek\UserManager\Repository\RoleRepository,
+	Mepatek\UserManager\Repository\UserActivityRepository,
+	Mepatek\UserManager\Entity\User,
+	Mepatek\UserManager\AuthDrivers\IAuthDriver;
 
 
 /**
@@ -16,16 +19,31 @@ use Nette,
 class Authenticator implements IAuthenticator
 {
 	/** @var UserRepository */
-	private $userRepository;
+	protected $userRepository;
+	/** @var RoleRepository */
+	protected $roleRepository;
+	/** @var UserActivityRepository */
+	protected $userActivityRepository;
+
+	/** @var IAuthDriver[] */
+	protected $authDrivers = array();
 
 	/**
 	 * Authenticator constructor.
 	 *
-	 * @param UserRepository $userRepository
+	 * @param UserRepository         $userRepository
+	 * @param RoleRepository         $roleRepository
+	 * @param UserActivityRepository $userActivityRepository
 	 */
-	public function __construct(UserRepository $userRepository)
+	public function __construct(
+		UserRepository $userRepository,
+		RoleRepository $roleRepository,
+		UserActivityRepository $userActivityRepository
+	)
 	{
 		$this->userRepository = $userRepository;
+		$this->roleRepository = $roleRepository;
+		$this->userActivityRepository = $userActivityRepository;
 	}
 
 	/**
@@ -39,16 +57,37 @@ class Authenticator implements IAuthenticator
 	public function authenticate(array $credentials)
 	{
 		list($username, $password) = $credentials;
+
 		$user = $this->userRepository->findOneBy(
 			[
 				"userName" => $username,
 			]
 		);
 
-		if (!$user) {
-			throw new Security\AuthenticationException('Wrong username.', self::IDENTITY_NOT_FOUND);
-		} elseif (!Security\Passwords::verify($password, $this->userRepository->getPassword($user))) {
-			throw new Security\AuthenticationException('Wrong password.', self::INVALID_CREDENTIAL);
+		$authExt = false;
+
+		foreach ($this->authDrivers as $authDriver) {
+			$authDriver->setUp(
+				$this->userRepository,
+				$this->roleRepository,
+				$this->userActivityRepository
+			);
+			if ($authExt = $authDriver->authenticate($username, $password, $user)) {
+				if ($user) {
+					$user->authMethod = $authDriver->getName();
+					break;
+				} else {
+					$authExt = false;
+				}
+			}
+		}
+
+		if (!$authExt) {
+			if (!$user) {
+				throw new Security\AuthenticationException('Wrong username.', self::IDENTITY_NOT_FOUND);
+			} elseif (!Security\Passwords::verify($password, $this->userRepository->getPassword($user))) {
+				throw new Security\AuthenticationException('Wrong password.', self::INVALID_CREDENTIAL);
+			}
 		}
 
 		// update lastLogged
@@ -152,6 +191,16 @@ class Authenticator implements IAuthenticator
 		}
 
 		return $retValue;
+	}
+
+	/**
+	 * Add authDriver
+	 *
+	 * @param IAuthDriver $authDriver
+	 */
+	public function addAuthDriver(IAuthDriver $authDriver)
+	{
+		$this->authDrivers[] = $authDriver;
 	}
 
 }
