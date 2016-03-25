@@ -218,12 +218,12 @@ class UserNetteDatabaseMapper extends AbstractNetteDatabaseMapper implements IMa
 	 */
 	private function getAuthDrivers($userId)
 	{
-		$roles = $this->database// get roles from table
+		$authDrivers = $this->database// get roles from table
 		->table("UsersAuthDrivers")
 			->select("AuthDriver, AuthID")
 			->where("UserID", $userId)
 			->fetchPairs("AuthDriver", "AuthID");
-		return array_values($roles);
+		return $authDrivers;
 	}
 
 	/**
