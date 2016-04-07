@@ -53,6 +53,16 @@ class UserFormFactory extends Object
 	 */
 	public $onRecoveryNotChangePassword;
 	/**
+	 * Event - change password success
+	 * @var array
+	 */
+	public $onChangePasswordSuccess;
+	/**
+	 * Event - not change password
+	 * @var array
+	 */
+	public $onNotChangePassword;
+	/**
 	 * If do not use translator, can change forms and error messages
 	 *
 	 * @var array
@@ -74,6 +84,7 @@ class UserFormFactory extends Object
 		"newPasswordConfirm_notSame"  => "Password not same",
 		"newPasswordConfirm_required" => "Please enter password",
 		"recoveryPasswordSubmit"      => "Change password",
+		"changePasswordSubmit"        => "Change password",
 
 		"err_username_or_password_incorrect" => "The username or password you entered is incorrect.",
 		"err_email_not_correct"              => "Please enter your e-mail.",
@@ -235,9 +246,9 @@ class UserFormFactory extends Object
 	}
 
 	/**
-	 * onSuccess event loginForm
+	 * onSuccess event recoveryPasswordForm
 	 *
-	 * calls events onRecoverySuccess[] and onRecoveryNotChangePassword[]
+	 * calls events onChangePasswordSuccess[]+onRecoverySuccess[] and onRecoveryNotChangePassword[]
 	 *
 	 * @param Form $form
 	 * @param      $values
@@ -261,13 +272,82 @@ class UserFormFactory extends Object
 			}
 		}
 
-		if (!$this->user->getAuthenticator()->changePasswordToken($values->token, $values->password)) {
+		$userId = 0;
+		if (!$this->user->getAuthenticator()->changePasswordToken($values->token, $values->newPassword, $userId)) {
 			$this->onRecoveryNotChangePassword();
 			$form->addError($this->messages['err_password_unable_to_change']);
 			return false;
 		}
 
+		$this->onChangePasswordSuccess($userId, $values->newPassword);
 		$this->onRecoverySuccess();
+		return true;
+	}
+
+	/**
+	 * Create password change form component
+	 *
+	 * id(hidden)
+	 * password(password)
+	 * passwordVerify(password)
+	 * send(submit)
+	 *
+	 * @param integer $id userId
+	 *
+	 * @return Form
+	 */
+	public function createChangePasswordForm($id)
+	{
+		$form = $this->getForm();
+		$form->addHidden("id", $id);
+
+		$form->addPassword('newPassword', $this->messages['newPassword'])
+			->addRule(Form::MIN_LENGTH, $this->messages['newPassword_minLength'], $this->passwordMinLength)
+			->setRequired($this->messages['newPassword_required']);
+		$form->addPassword('newPasswordConfirm', $this->messages['newPasswordConfirm'])
+			->setRequired($this->messages['newPasswordConfirm_required'])
+			->addRule(Form::EQUAL, $this->messages['newPasswordConfirm_notSame'], $form['newPassword']);
+		$form->addSubmit('send', $this->messages['changePasswordSubmit']);
+
+		$form->onSuccess[] = [$this, 'changePasswordFormSucceeded'];
+		return $form;
+	}
+
+
+	/**
+	 * onSuccess event changePasswordForm
+	 *
+	 * calls events onChangePasswordSuccess[] and onNotChangePassword[]
+	 *
+	 * @param Form $form
+	 * @param      $values
+	 *
+	 * @return bool
+	 */
+	public function changePasswordFormSucceeded(Form $form, $values)
+	{
+
+		if (($passwordSafe = $this->user->getAuthenticator()->isPasswordSafe(
+				$values->newPassword,
+				$this->passwordMinLength,
+				$this->passwordMinLevel
+			)) > 0
+		) {
+			if ($passwordSafe == 2 or $passwordSafe == 6) {
+				$form->addError(sprintf($this->messages['newPassword_minLength'], $this->passwordMinLength));
+			}
+			if ($passwordSafe == 4 or $passwordSafe == 6) {
+				$form->addError($this->messages['err_password_too_simple']);
+			}
+		}
+
+		if (!$this->user->getAuthenticator()->changePassword($values->id, $values->newPassword)) {
+			$this->onNotChangePassword();
+			$form->addError($this->messages['err_password_unable_to_change']);
+			return false;
+		}
+
+		$this->onChangePasswordSuccess($values->id, $values->newPassword);
 		return true;
 	}
 
