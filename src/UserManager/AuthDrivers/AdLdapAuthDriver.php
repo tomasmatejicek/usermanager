@@ -139,6 +139,8 @@ class AdLdapAuthDriver implements IAuthDriver
 		$user->userName = $adUser->getAccountName();
 		$user->email = $adUser->getEmail();
 		$user->phone = $adUser->getTelephoneNumber();
+		$user->title = $adUser->getTitle();
+		$user->thumbnail = $adUser->getThumbnailEncoded();
 
 		// save user
 		if ($this->userRepository->save($user)) {
