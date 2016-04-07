@@ -19,6 +19,12 @@ class User extends AbstractEntity
 	protected $email;
 	/** @var string 255 */
 	protected $phone;
+	/** @var string 100 */
+	protected $title;
+	/** @var string 10 */
+	protected $language;
+	/** @var string - encoded image for atribute src */
+	protected $thumbnail;
 	/** @var \Nette\Utils\DateTime */
 	protected $created;
 	/** @var \Nette\Utils\DateTime */
@@ -118,6 +124,54 @@ class User extends AbstractEntity
 	public function setPhone($phone)
 	{
 		$this->phone = $this->StringTruncate($phone, 255);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getTitle()
+	{
+		return $this->title;
+	}
+
+	/**
+	 * @param string $title
+	 */
+	public function setTitle($title)
+	{
+		$this->title = $this->StringTruncate($title, 100);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getLanguage()
+	{
+		return $this->language;
+	}
+
+	/**
+	 * @param string $language
+	 */
+	public function setLanguage($language)
+	{
+		$this->language = $this->StringTruncate($language, 10);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getThumbnail()
+	{
+		return $this->thumbnail;
+	}
+
+	/**
+	 * @param string $thumbnail
+	 */
+	public function setThumbnail($thumbnail)
+	{
+		$this->thumbnail = $thumbnail;
 	}
 
 	/**
