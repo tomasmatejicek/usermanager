@@ -10,6 +10,7 @@ use Nette,
 	Mepatek\UserManager\Repository\RoleRepository,
 	Mepatek\UserManager\Repository\UserActivityRepository,
 	Mepatek\UserManager\Entity\User,
+	Mepatek\UserManager\Entity\UserActivity,
 	Mepatek\UserManager\AuthDrivers\IAuthDriver;
 
 
@@ -94,7 +95,25 @@ class Authenticator implements IAuthenticator
 		$user->lastLogged = new DateTime();
 		$this->userRepository->save($user);
 
+		$userActivity = new UserActivity();
+		$userActivity->userId = $user->id;
+		$userActivity->type = "login";
+		$this->userActivityRepository->save($userActivity);
+
 		return new Security\Identity($user->id, $user->roles, $user);
+	}
+
+	/**
+	 * Log logout activity
+	 *
+	 * @param $userId
+	 */
+	public function logout($userId)
+	{
+		$userActivity = new UserActivity();
+		$userActivity->userId = $userId;
+		$userActivity->type = "logout";
+		$this->userActivityRepository->save($userActivity);
 	}
 
 	/**
@@ -122,16 +141,19 @@ class Authenticator implements IAuthenticator
 
 	/**
 	 * Change password for $token
+	 * Set $id to finded user id
 	 *
 	 * @param string $token
 	 * @param string $newPassword
+	 * @param integer $id
 	 *
 	 * @return boolean
 	 */
-	public function changePasswordToken($token, $newPassword)
+	public function changePasswordToken($token, $newPassword, &$id)
 	{
 		$user = $this->userRepository->findUserByToken($token);
 		if ($user) {
+			$id = $user->id;
 			return $this->changePassword($user->id, $newPassword);
 		} else {
 			return false;
